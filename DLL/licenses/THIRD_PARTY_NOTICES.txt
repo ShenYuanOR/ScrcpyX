@@ -1,0 +1,11 @@
+ScrcpyX redistributes the unmodified scrcpy 4.1 Windows x64 runtime package.
+
+scrcpy
+Copyright (C) 2018 Genymobile
+License: Apache License 2.0
+Source: https://github.com/Genymobile/scrcpy/tree/v4.1
+Full license text: scrcpy-LICENSE.txt (and ../LICENSE.txt)
+
+The official runtime package also contains Android Debug Bridge, SDL, FFmpeg,
+libusb, and their runtime libraries. Their respective notices and source links
+are maintained by the upstream scrcpy project and release package.

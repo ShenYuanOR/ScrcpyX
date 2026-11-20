@@ -1,0 +1,11 @@
+.tools/
+.vs/
+**/bin/
+**/obj/
+publish/
+*.user
+*.suo
+
+.aipople/
+data/*.json
+data/logs/

@@ -1,0 +1,548 @@
+<Window
+    x:Class="ScrcpyX.ShellWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ScrcpyX"
+    Title="ScrcpyX">
+  <Grid x:Name="Root" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" RequestedTheme="Dark">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <Grid.Resources>
+    <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+    <Style x:Key="DeviceFileItemStyle" TargetType="ListViewItem">
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Padding" Value="8,2" />
+      <Setter Property="MinHeight" Value="48" />
+      <Setter Property="UseSystemFocusVisuals" Value="True" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ListViewItem">
+            <Grid>
+              <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates">
+                  <VisualState x:Name="Normal" />
+                  <VisualState x:Name="PointerOver">
+                    <VisualState.Setters>
+                      <Setter Target="Fill.Background" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />
+                    </VisualState.Setters>
+                  </VisualState>
+                  <VisualState x:Name="Pressed">
+                    <VisualState.Setters>
+                      <Setter Target="Fill.Background" Value="{ThemeResource SubtleFillColorTertiaryBrush}" />
+                    </VisualState.Setters>
+                  </VisualState>
+                  <VisualState x:Name="Selected">
+                    <VisualState.Setters>
+                      <Setter Target="Fill.Background" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+                      <Setter Target="Presenter.Foreground" Value="White" />
+                    </VisualState.Setters>
+                  </VisualState>
+                  <VisualState x:Name="PointerOverSelected">
+                    <VisualState.Setters>
+                      <Setter Target="Fill.Background" Value="{ThemeResource AccentFillColorSecondaryBrush}" />
+                      <Setter Target="Presenter.Foreground" Value="White" />
+                    </VisualState.Setters>
+                  </VisualState>
+                  <VisualState x:Name="PressedSelected">
+                    <VisualState.Setters>
+                      <Setter Target="Fill.Background" Value="{ThemeResource AccentFillColorTertiaryBrush}" />
+                      <Setter Target="Presenter.Foreground" Value="White" />
+                    </VisualState.Setters>
+                  </VisualState>
+                </VisualStateGroup>
+              </VisualStateManager.VisualStateGroups>
+              <Border x:Name="Fill" />
+              <ContentPresenter x:Name="Presenter"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Margin="{TemplateBinding Padding}" />
+            </Grid>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <DataTemplate x:Key="DeviceFileTemplate" x:DataType="local:DeviceEntry">
+      <Grid ColumnSpacing="8" Padding="0,2">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="24" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <FontIcon Glyph="{x:Bind IconGlyph}" FontFamily="{StaticResource IconFont}" FontSize="16"
+                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Spacing="1">
+          <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{x:Bind DetailLabel}" FontSize="12" Opacity="0.72" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </Grid>
+    </DataTemplate>
+    <Style x:Key="FileCommandStyle" TargetType="Button">
+      <Setter Property="Width" Value="76" />
+      <Setter Property="Height" Value="30" />
+      <Setter Property="Padding" Value="6,0" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style x:Key="FileDeleteStyle" TargetType="Button" BasedOn="{StaticResource FileCommandStyle}">
+      <Setter Property="Background" Value="{ThemeResource SystemFillColorCriticalBackgroundBrush}" />
+      <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+    </Style>
+    <MenuFlyout x:Key="DeviceFileMenu" Opening="DeviceFileMenu_Opening">
+      <MenuFlyoutItem Text="打开" Click="MenuOpen_Click" />
+      <MenuFlyoutItem Text="复制" Click="Copy_Click" />
+      <MenuFlyoutItem Text="剪切" Click="Cut_Click" />
+      <MenuFlyoutItem Text="粘贴到当前文件夹" Click="PasteInto_Click" />
+      <MenuFlyoutItem Text="导出到电脑" Click="Pull_Click" />
+      <MenuFlyoutItem Text="导入到此文件夹" Click="ImportInto_Click" />
+      <MenuFlyoutItem Text="重命名" Click="Rename_Click" />
+      <MenuFlyoutItem Text="删除" Click="Delete_Click" />
+      <MenuFlyoutItem Text="刷新" Click="FileRefresh_Click" />
+    </MenuFlyout>
+    </Grid.Resources>
+    <Grid x:Name="TitleBarHost" Grid.Row="0" Height="32" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <Grid x:Name="TitleDrag" Background="Transparent">
+        <TextBlock x:Name="CaptionTitle" Text="ScrcpyX" VerticalAlignment="Center" Margin="12,0,0,0" Visibility="Collapsed" />
+      </Grid>
+      <StackPanel x:Name="CaptionButtons" Grid.Column="1" Orientation="Horizontal" Visibility="Collapsed">
+        <Button Click="CaptionMin_Click" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" AutomationProperties.Name="最小化">
+          <Button.Resources>
+            <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#55FFFFFF" />
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+          </Button.Resources>
+          <FontIcon Glyph="&#xE921;" FontFamily="{StaticResource IconFont}" FontSize="12" />
+        </Button>
+        <Button Click="CaptionMax_Click" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" AutomationProperties.Name="最大化">
+          <Button.Resources>
+            <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#55FFFFFF" />
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+          </Button.Resources>
+          <FontIcon x:Name="CaptionMaxIcon" Glyph="&#xE922;" FontFamily="{StaticResource IconFont}" FontSize="12" />
+        </Button>
+        <Button Click="CaptionClose_Click" Width="46" Height="32" Padding="0" Background="Transparent" BorderThickness="0" AutomationProperties.Name="关闭">
+          <Button.Resources>
+            <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#C42B1C" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#A32014" />
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+          </Button.Resources>
+          <FontIcon Glyph="&#xE8BB;" FontFamily="{StaticResource IconFont}" FontSize="12" />
+        </Button>
+      </StackPanel>
+    </Grid>
+    <Grid x:Name="HomeView" Grid.Row="1" Padding="28,20,28,24" HorizontalAlignment="Left" VerticalAlignment="Stretch" SizeChanged="HomeView_SizeChanged">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+      <StackPanel Spacing="14">
+        <ScrollViewer x:Name="DeviceTitleScroll" HorizontalAlignment="Left" MaxWidth="240"
+                      HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
+                      HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled" IsTabStop="False">
+          <TextBlock x:Name="DeviceTitle" Text="正在查找手机" FontSize="28" FontWeight="SemiBold" TextWrapping="NoWrap" VerticalAlignment="Center" />
+        </ScrollViewer>
+        <TextBlock x:Name="StatusText" Text="稍等一下。" TextWrapping="Wrap" Opacity="0.72" />
+        <ComboBox x:Name="DeviceBox" HorizontalAlignment="Left" MinWidth="240" Visibility="Collapsed" SelectionChanged="DeviceBox_SelectionChanged" />
+        <StackPanel x:Name="HomeActions" Orientation="Horizontal" Spacing="8" SizeChanged="HomeActions_SizeChanged"
+                    AutomationProperties.Name="首页操作">
+          <Button x:Name="StartButton" Content="开始投屏" Style="{StaticResource AccentButtonStyle}" Click="Start_Click" VerticalAlignment="Center" />
+          <Button Content="打开文件管理" Click="ShowFiles_Click" VerticalAlignment="Center" />
+          <Button Click="Refresh_Click" Width="32" Height="32" Padding="0" Background="Transparent" BorderThickness="0"
+                  VerticalAlignment="Center" AutomationProperties.Name="刷新设备" ToolTipService.ToolTip="刷新设备">
+            <Button.Resources>
+              <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+              <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="Transparent" />
+              <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="Transparent" />
+              <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+              <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+              <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+            </Button.Resources>
+            <FontIcon Glyph="&#xE72C;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+          </Button>
+        </StackPanel>
+      </StackPanel>
+      <Border x:Name="AdvancedHost" Grid.Row="1" Margin="0,12,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+              AutomationProperties.Name="高级选项容器">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <Button x:Name="AdvancedToggle" Click="AdvancedToggle_Click" HorizontalAlignment="Stretch" MinHeight="48"
+                  Padding="16,0,0,0" CornerRadius="4" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"
+                  Background="{ThemeResource ExpanderHeaderBackground}" BorderBrush="{ThemeResource ExpanderHeaderBorderBrush}"
+                  BorderThickness="{ThemeResource ExpanderHeaderBorderThickness}" AutomationProperties.Name="高级选项">
+            <Button.Template>
+              <ControlTemplate TargetType="Button">
+                <Grid Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                      BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+                      MinHeight="{TemplateBinding MinHeight}" Padding="{TemplateBinding Padding}">
+                  <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                </Grid>
+              </ControlTemplate>
+            </Button.Template>
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <TextBlock Text="高级选项" VerticalAlignment="Center" />
+              <FontIcon x:Name="AdvancedChevron" Grid.Column="1" Glyph="&#xE70D;" FontFamily="{StaticResource IconFont}" FontSize="12"
+                        Width="40" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5"
+                        Foreground="{ThemeResource ExpanderChevronForeground}">
+                <FontIcon.RenderTransform>
+                  <RotateTransform x:Name="AdvancedChevronRotate" Angle="0" />
+                </FontIcon.RenderTransform>
+              </FontIcon>
+            </Grid>
+          </Button>
+          <Border x:Name="AdvancedBody" Grid.Row="1" Height="0" HorizontalAlignment="Stretch" SizeChanged="AdvancedBody_SizeChanged"
+                  Background="{ThemeResource ExpanderContentBackground}" BorderBrush="{ThemeResource ExpanderContentBorderBrush}"
+                  BorderThickness="1,0,1,1" CornerRadius="0,0,4,4" AutomationProperties.Name="高级选项内容">
+            <ScrollViewer x:Name="AdvancedScroll" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Auto" Padding="16,8,8,8">
+              <ScrollViewer.Template>
+                <ControlTemplate TargetType="ScrollViewer">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ScrollContentPresenter x:Name="ScrollContentPresenter" Grid.Column="0"
+                                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                                            Margin="{TemplateBinding Padding}" />
+                    <ScrollBar x:Name="VerticalScrollBar" Grid.Column="1" Width="16" Orientation="Vertical"
+                               IndicatorMode="MouseIndicator"
+                               Maximum="{TemplateBinding ScrollableHeight}"
+                               ViewportSize="{TemplateBinding ViewportHeight}"
+                               Value="{TemplateBinding VerticalOffset}"
+                               Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" />
+                    <ScrollBar x:Name="HorizontalScrollBar" Orientation="Horizontal" Height="0" Visibility="Collapsed"
+                               Maximum="{TemplateBinding ScrollableWidth}"
+                               ViewportSize="{TemplateBinding ViewportWidth}"
+                               Value="{TemplateBinding HorizontalOffset}" />
+                  </Grid>
+                </ControlTemplate>
+              </ScrollViewer.Template>
+              <StackPanel x:Name="AdvancedContent">
+                <TextBlock Text="这里的设置会在下次开始投屏时生效。其余 scrcpy 参数暂未接入。" TextWrapping="Wrap" Opacity="0.72" Margin="0,0,0,8" />
+                <ContentControl x:Name="AdvancedPanel" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                  <StackPanel x:Name="AdvancedRows" Spacing="6" />
+                </ContentControl>
+              </StackPanel>
+            </ScrollViewer>
+          </Border>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <Grid x:Name="MirrorView" Grid.Row="1" Visibility="Collapsed">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="56" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition x:Name="SidePanelColumn" Width="0" />
+      </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*" />
+        <RowDefinition x:Name="BottomPanelRow" Height="0" />
+      </Grid.RowDefinitions>
+      <Border Grid.Row="0" Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+        <Grid>
+        <StackPanel Spacing="8" HorizontalAlignment="Center" Margin="0,12,0,0" VerticalAlignment="Top">
+          <Button Click="StopView_Click" Width="40" Height="40" Padding="0" HorizontalAlignment="Center"
+                  Background="#C42B1C"
+                  AutomationProperties.Name="停止投屏" ToolTipService.ToolTip="停止投屏">
+            <Button.Resources>
+              <SolidColorBrush x:Key="ButtonBackground" Color="#C42B1C" />
+              <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#A32014" />
+              <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#8A1B10" />
+              <SolidColorBrush x:Key="ButtonForeground" Color="White" />
+              <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+              <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
+              <SolidColorBrush x:Key="ButtonBorderBrush" Color="#C42B1C" />
+              <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#A32014" />
+              <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#8A1B10" />
+            </Button.Resources>
+            <Grid Width="20" Height="20">
+              <Ellipse Width="16" Height="16" Stroke="White" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              <Rectangle Width="6.5" Height="6.5" Stroke="White" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Grid>
+          </Button>
+          <Button Click="MirrorBack_Click" Width="40" Height="40" Padding="0" HorizontalAlignment="Center"
+                  AutomationProperties.Name="返回" ToolTipService.ToolTip="返回">
+            <Path Width="20" Height="20" Stretch="None" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5"
+                  StrokeLineJoin="Miter" Data="M15.5,3.5 L4.5,10 L15.5,16.5 Z" />
+          </Button>
+          <Button Click="MirrorHome_Click" Width="40" Height="40" Padding="0" HorizontalAlignment="Center"
+                  AutomationProperties.Name="主页" ToolTipService.ToolTip="主页">
+            <Path Width="20" Height="20" Stretch="None" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5"
+                  StrokeLineJoin="Miter"
+                  Data="M6,3 H14 A3,3 0 0 1 17,6 V14 A3,3 0 0 1 14,17 H6 A3,3 0 0 1 3,14 V6 A3,3 0 0 1 6,3 Z" />
+          </Button>
+          <Button Click="MirrorRecents_Click" Width="40" Height="40" Padding="0" HorizontalAlignment="Center"
+                  AutomationProperties.Name="任务" ToolTipService.ToolTip="任务">
+            <Canvas Width="20" Height="20">
+              <Rectangle Canvas.Left="2" Canvas.Top="3" Width="4" Height="14" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" />
+              <Rectangle Canvas.Left="8" Canvas.Top="3" Width="4" Height="14" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" />
+              <Rectangle Canvas.Left="14" Canvas.Top="3" Width="4" Height="14" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" />
+            </Canvas>
+          </Button>
+          <Button x:Name="FilePanelButton" Click="ToggleFilePanel_Click" Width="40" Height="40" Padding="0" HorizontalAlignment="Center"
+                  AutomationProperties.Name="文件" ToolTipService.ToolTip="文件">
+            <FontIcon Glyph="&#xE8B7;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+          </Button>
+        </StackPanel>
+          <StackPanel VerticalAlignment="Bottom" Margin="4,0,4,8" Spacing="2"
+                      ToolTipService.ToolTip="渲染延迟是帧到达后到画面绘制完成的滚动平均，含解码。ADB 往返是每 2 秒一次 adb shell echo 的耗时，含启动 adb。这不是端到端延迟，端到端需要外部高速摄像机。">
+            <TextBlock x:Name="RenderLatencyText" FontSize="10" TextWrapping="Wrap" TextAlignment="Center" Text="渲染 —" />
+            <TextBlock x:Name="AdbLatencyText" FontSize="10" TextWrapping="Wrap" TextAlignment="Center" Text="ADB 往返 —" />
+            <TextBlock FontSize="9" Opacity="0.72" TextWrapping="Wrap" TextAlignment="Center" Text="不是端到端延迟" />
+          </StackPanel>
+        </Grid>
+      </Border>
+      <Grid x:Name="PhoneHost" Grid.Row="0" Grid.Column="1" Background="Black" SizeChanged="PhoneHost_SizeChanged"
+            PointerPressed="Phone_Pressed" PointerMoved="Phone_Moved" PointerReleased="Phone_Released" PointerCanceled="Phone_Released">
+        <Image x:Name="FrameImage" Stretch="Uniform" />
+        <TextBlock x:Name="VideoStatus" Text="正在连接手机…" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" TextWrapping="Wrap" Margin="16" />
+      </Grid>
+      <Border x:Name="FilePanel" Grid.Row="0" Grid.Column="2" Visibility="Collapsed" Padding="8"
+              Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <StackPanel x:Name="PortraitTools" Margin="0,0,0,8" Spacing="6">
+            <Grid ColumnSpacing="6">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <Button Click="FileUp_Click" Padding="8,4" AutomationProperties.Name="向上">
+                <FontIcon Glyph="&#xE74A;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+              </Button>
+              <TextBox x:Name="PanelPathBox" Grid.Column="1" MinWidth="80" KeyDown="PathBox_KeyDown" />
+              <Button Grid.Column="2" Click="FileRefresh_Click" Padding="8,4" AutomationProperties.Name="刷新">
+                <FontIcon Glyph="&#xE72C;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+              </Button>
+            </Grid>
+          </StackPanel>
+          <Grid x:Name="LandscapeTools" Margin="0,0,0,8" RowSpacing="6" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid ColumnSpacing="6">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <Button Click="FileUp_Click" Padding="8,4" AutomationProperties.Name="向上" ToolTipService.ToolTip="向上">
+                <FontIcon Glyph="&#xE74A;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+              </Button>
+              <TextBox x:Name="PanelPathBoxWide" Grid.Column="1" MinWidth="80" KeyDown="PathBox_KeyDown" />
+              <Button Grid.Column="2" Click="FileRefresh_Click" Padding="8,4" AutomationProperties.Name="刷新" ToolTipService.ToolTip="刷新">
+                <FontIcon Glyph="&#xE72C;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+              </Button>
+            </Grid>
+          </Grid>
+          <local:FileCommandWrap Grid.Row="1" Margin="0,0,0,8">
+            <Button Style="{StaticResource FileCommandStyle}" AutomationProperties.Name="新建" ToolTipService.ToolTip="新建文件夹">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuFlyoutItem Text="文件夹" Click="Mkdir_Click" />
+                </MenuFlyout>
+              </Button.Flyout>
+              <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                <FontIcon Glyph="&#xE8F4;" FontFamily="{StaticResource IconFont}" FontSize="14" />
+                <TextBlock Text="新建" FontSize="12" />
+              </StackPanel>
+            </Button>
+            <Button Style="{StaticResource FileCommandStyle}" Click="Cut_Click" AutomationProperties.Name="剪切" ToolTipService.ToolTip="剪切">
+              <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                <FontIcon Glyph="&#xE8C6;" FontFamily="{StaticResource IconFont}" FontSize="14" />
+                <TextBlock Text="剪切" FontSize="12" />
+              </StackPanel>
+            </Button>
+            <Button Style="{StaticResource FileCommandStyle}" Click="Copy_Click" AutomationProperties.Name="复制" ToolTipService.ToolTip="复制">
+              <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                <FontIcon Glyph="&#xE8C8;" FontFamily="{StaticResource IconFont}" FontSize="14" />
+                <TextBlock Text="复制" FontSize="12" />
+              </StackPanel>
+            </Button>
+            <Button Style="{StaticResource FileCommandStyle}" Click="Paste_Click" AutomationProperties.Name="粘贴" ToolTipService.ToolTip="粘贴">
+              <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                <FontIcon Glyph="&#xE77F;" FontFamily="{StaticResource IconFont}" FontSize="14" />
+                <TextBlock Text="粘贴" FontSize="12" />
+              </StackPanel>
+            </Button>
+            <Button Style="{StaticResource FileCommandStyle}" Click="Push_Click" AutomationProperties.Name="导入" ToolTipService.ToolTip="从电脑导入">
+              <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                <FontIcon Glyph="&#xE898;" FontFamily="{StaticResource IconFont}" FontSize="14" />
+                <TextBlock Text="导入" FontSize="12" />
+              </StackPanel>
+            </Button>
+            <Button Style="{StaticResource FileCommandStyle}" Click="Pull_Click" AutomationProperties.Name="导出" ToolTipService.ToolTip="导出到电脑">
+              <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                <FontIcon Glyph="&#xE896;" FontFamily="{StaticResource IconFont}" FontSize="14" />
+                <TextBlock Text="导出" FontSize="12" />
+              </StackPanel>
+            </Button>
+            <Button Style="{StaticResource FileCommandStyle}" Click="Rename_Click" AutomationProperties.Name="重命名" ToolTipService.ToolTip="重命名">
+              <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                <FontIcon Glyph="&#xE8AC;" FontFamily="{StaticResource IconFont}" FontSize="14" />
+                <TextBlock Text="重命名" FontSize="12" />
+              </StackPanel>
+            </Button>
+            <Button Style="{StaticResource FileDeleteStyle}" Click="Delete_Click" AutomationProperties.Name="删除" ToolTipService.ToolTip="删除">
+              <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                <FontIcon Glyph="&#xE74D;" FontFamily="{StaticResource IconFont}" FontSize="14" />
+                <TextBlock Text="删除" FontSize="12" />
+              </StackPanel>
+            </Button>
+          </local:FileCommandWrap>
+          <Grid Grid.Row="2">
+          <ListView x:Name="PanelFileList" SelectionMode="Extended" IsItemClickEnabled="False"
+                    RightTapped="FileList_RightTapped" ContextFlyout="{StaticResource DeviceFileMenu}"
+                    ItemTemplate="{StaticResource DeviceFileTemplate}" ItemContainerStyle="{StaticResource DeviceFileItemStyle}"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollMode="Disabled"
+                    DoubleTapped="FileList_DoubleTapped" AllowDrop="True" DragOver="FileList_DragOver" Drop="FileList_Drop" KeyDown="FileList_KeyDown" />
+          <TextBlock x:Name="PanelFilePlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center"
+                     TextWrapping="Wrap" TextAlignment="Center" Opacity="0.72" Margin="12"
+                     IsHitTestVisible="False" Visibility="Collapsed" />
+          </Grid>
+          <StackPanel Grid.Row="3" Margin="0,6,0,0" Spacing="4">
+            <StackPanel x:Name="PanelFileProgress" Visibility="Collapsed" Spacing="4">
+              <TextBlock x:Name="PanelFileProgressName" TextTrimming="CharacterEllipsis" />
+              <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="72" />
+                </Grid.ColumnDefinitions>
+                <ProgressBar x:Name="PanelFileProgressBar" Minimum="0" Maximum="100" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="取消" Click="CancelFileOp_Click" AutomationProperties.Name="取消文件操作" />
+              </Grid>
+            </StackPanel>
+            <TextBlock x:Name="PanelFileStatus" Opacity="0.72" TextWrapping="Wrap" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+    <InfoBar x:Name="WarningBanner" Grid.Row="1" IsOpen="False" IsClosable="True" Severity="Warning"
+             VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="28,12,28,0" />
+
+    <Grid x:Name="FileView" Grid.Row="1" Padding="28,20,28,24" Visibility="Collapsed">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Content="退出文件管理" Click="ShowHome_Click" />
+        <Button Content="向上" Click="FileUp_Click" />
+        <Button Content="刷新" Click="FileRefresh_Click" />
+        <TextBox x:Name="PathBox" MinWidth="360" KeyDown="PathBox_KeyDown" />
+      </StackPanel>
+      <local:FileCommandWrap Grid.Row="1" Margin="0,10,0,8">
+        <Button Style="{StaticResource FileCommandStyle}" AutomationProperties.Name="新建">
+          <Button.Flyout>
+            <MenuFlyout>
+              <MenuFlyoutItem Text="文件夹" Click="Mkdir_Click" />
+            </MenuFlyout>
+          </Button.Flyout>
+          <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+            <FontIcon Glyph="&#xE8F4;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+            <TextBlock Text="新建" FontSize="12" />
+          </StackPanel>
+        </Button>
+        <Button Style="{StaticResource FileCommandStyle}" Click="Cut_Click" AutomationProperties.Name="剪切">
+          <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+            <FontIcon Glyph="&#xE8C6;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+            <TextBlock Text="剪切" FontSize="12" />
+          </StackPanel>
+        </Button>
+        <Button Style="{StaticResource FileCommandStyle}" Click="Copy_Click" AutomationProperties.Name="复制">
+          <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+            <FontIcon Glyph="&#xE8C8;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+            <TextBlock Text="复制" FontSize="12" />
+          </StackPanel>
+        </Button>
+        <Button Style="{StaticResource FileCommandStyle}" Click="Paste_Click" AutomationProperties.Name="粘贴">
+          <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+            <FontIcon Glyph="&#xE77F;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+            <TextBlock Text="粘贴" FontSize="12" />
+          </StackPanel>
+        </Button>
+        <Button Style="{StaticResource FileCommandStyle}" Click="Push_Click" AutomationProperties.Name="导入">
+          <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+            <FontIcon Glyph="&#xE898;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+            <TextBlock Text="导入" FontSize="12" />
+          </StackPanel>
+        </Button>
+        <Button Style="{StaticResource FileCommandStyle}" Click="Pull_Click" AutomationProperties.Name="导出">
+          <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+            <FontIcon Glyph="&#xE896;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+            <TextBlock Text="导出" FontSize="12" />
+          </StackPanel>
+        </Button>
+        <Button Style="{StaticResource FileCommandStyle}" Click="Rename_Click" AutomationProperties.Name="重命名">
+          <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+            <FontIcon Glyph="&#xE8AC;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+            <TextBlock Text="重命名" FontSize="12" />
+          </StackPanel>
+        </Button>
+        <Button Style="{StaticResource FileDeleteStyle}" Click="Delete_Click" AutomationProperties.Name="删除">
+          <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+            <FontIcon Glyph="&#xE74D;" FontFamily="{StaticResource IconFont}" FontSize="16" />
+            <TextBlock Text="删除" FontSize="12" />
+          </StackPanel>
+        </Button>
+      </local:FileCommandWrap>
+      <Grid Grid.Row="2">
+      <ListView x:Name="FileList" SelectionMode="Extended" IsItemClickEnabled="False"
+                RightTapped="FileList_RightTapped" ContextFlyout="{StaticResource DeviceFileMenu}"
+                ItemTemplate="{StaticResource DeviceFileTemplate}" ItemContainerStyle="{StaticResource DeviceFileItemStyle}"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollMode="Disabled"
+                DoubleTapped="FileList_DoubleTapped" AllowDrop="True" DragOver="FileList_DragOver" Drop="FileList_Drop" KeyDown="FileList_KeyDown" />
+      <TextBlock x:Name="FilePlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center"
+                 TextWrapping="Wrap" TextAlignment="Center" Opacity="0.72" Margin="12"
+                 IsHitTestVisible="False" Visibility="Collapsed" />
+      </Grid>
+      <StackPanel Grid.Row="3" Margin="0,8,0,0" Spacing="4">
+        <StackPanel x:Name="FileProgress" Visibility="Collapsed" Spacing="4">
+          <TextBlock x:Name="FileProgressName" TextTrimming="CharacterEllipsis" />
+          <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="72" />
+            </Grid.ColumnDefinitions>
+            <ProgressBar x:Name="FileProgressBar" Minimum="0" Maximum="100" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Content="取消" Click="CancelFileOp_Click" AutomationProperties.Name="取消文件操作" />
+          </Grid>
+        </StackPanel>
+        <TextBlock x:Name="FileStatus" Opacity="0.72" TextWrapping="Wrap" />
+      </StackPanel>
+    </Grid>
+  </Grid>
+</Window>
