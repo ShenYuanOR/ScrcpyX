@@ -1,11 +1,16 @@
-.tools/
-.vs/
+# 构建产物
 **/bin/
 **/obj/
 publish/
+
+# IDE / 本机工具
+.vs/
+.tools/
 *.user
 *.suo
 
+# 本机协作与个人数据（不进仓库）
 .aipople/
+.claude/
 data/*.json
 data/logs/
