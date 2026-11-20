@@ -92,7 +92,10 @@ Publish.ps1           发布脚本
 - **scrcpy 4.1**（Apache License 2.0）：`DLL\scrcpy-server`、`DLL\scrcpy.exe` 等。版权与许可证见 `DLL\licenses\`。
 - **adb、SDL、FFmpeg、libusb**：随官方 scrcpy 包分发，各自的声明和源码链接见 `DLL\licenses\THIRD_PARTY_NOTICES.txt`。
 - **Windows App SDK、.NET**：由各自的运行时安装包提供，不随本项目分发。
+- **程序图标**：铸图标 by CSS GG on [Icon-Icons.com](https://icon-icons.com/zh/authors/1235-css-gg)。
 
 ## 许可证
 
-待定。
+ScrcpyX 使用 [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0) 发布，**仅限非商业用途**。全文见 [LICENSE](LICENSE)。
+
+第三方组件（如 scrcpy）仍遵循各自的许可证，见上面的第三方组件部分。
