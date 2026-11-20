@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScrcpyX — 安卓投屏与文件管理</title>
+  <meta name="description" content="ScrcpyX 是 Windows 下的安卓投屏工具，画面与文件管理在同一个窗口里完成。">
+  <link rel="icon" href="app-256.png" type="image/png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <img src="app-256.png" alt="" width="36" height="36">
+      <span>ScrcpyX</span>
+    </div>
+    <nav>
+      <a href="#features">功能</a>
+      <a href="#requirements">要求</a>
+      <a href="#install">安装</a>
+      <a href="#faq">常见问题</a>
+      <a href="https://github.com/ShenYuanOR/ScrcpyX" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-text">
+        <h1>一个窗口，投屏与文件管理</h1>
+        <p class="lead">ScrcpyX 把安卓手机画面投到 Windows 桌面上，投屏和文件管理都在同一个窗口里完成。画面由 adb 启动的 scrcpy-server 提供，解码与显示由程序本身完成。</p>
+        <div class="actions">
+          <a class="btn primary" href="https://github.com/ShenYuanOR/ScrcpyX/releases">下载最新版本</a>
+          <a class="btn" href="https://github.com/ShenYuanOR/ScrcpyX">查看源码</a>
+        </div>
+        <p class="note">版本发布在 GitHub Releases 中提供安装包（<code>ScrcpyX-Setup-*.exe</code>）与 zip 包。</p>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="window">
+          <div class="bar"><span></span><span></span><span></span></div>
+          <div class="body">
+            <div class="phone">
+              <div class="screen"></div>
+            </div>
+            <div class="panel">
+              <div class="row"></div>
+              <div class="row"></div>
+              <div class="row short"></div>
+              <div class="row"></div>
+              <div class="row short"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <h2>功能</h2>
+      <div class="grid">
+        <article>
+          <h3>同一窗口</h3>
+          <p>首页与投屏视图切换，不再弹出第二个窗口。左侧是操作栏，中间是手机画面。</p>
+        </article>
+        <article>
+          <h3>文件管理</h3>
+          <p>浏览手机存储，支持复制、剪切、粘贴、导入、导出、新建、重命名与删除。文件面板竖屏在右侧、横屏在下方展开。</p>
+        </article>
+        <article>
+          <h3>参数精简</h3>
+          <p>首页只保留常用的 5 个参数：最大画面尺寸、最大帧率、视频比特率、保持唤醒、关闭屏幕。其余 scrcpy 参数暂未接入。</p>
+        </article>
+        <article>
+          <h3>延迟可见</h3>
+          <p>左栏底部显示渲染耗时与 ADB 往返耗时，方便判断当前的流畅程度。注意：这不是端到端延迟。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="requirements">
+      <h2>系统要求</h2>
+      <ul class="list">
+        <li>Windows 10 1809 及以上，或 Windows 11，x64。</li>
+        <li><a href="https://dotnet.microsoft.com/download/dotnet/10.0" rel="noopener">.NET 10 桌面运行时</a>。</li>
+        <li><a href="https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads" rel="noopener">Windows App Runtime 1.8</a>。</li>
+        <li>安卓手机，开启 USB 调试；无线连接需要先执行一次 <code>adb connect</code>。</li>
+      </ul>
+      <p class="note">程序启动时会检查以上运行时。缺少时会自动打开对应的下载页。</p>
+    </section>
+
+    <section id="install">
+      <h2>安装</h2>
+      <ol class="steps">
+        <li>到 <a href="https://github.com/ShenYuanOR/ScrcpyX/releases" rel="noopener">Releases</a> 下载 <code>ScrcpyX-Setup-*.exe</code>，按向导安装。安装到当前用户目录，不需要管理员权限。</li>
+        <li>或下载 zip 包，解压后直接运行 <code>ScrcpyX.exe</code>。</li>
+        <li>用数据线或无线调试连接手机，在首页点「开始投屏」。</li>
+      </ol>
+    </section>
+
+    <section id="faq">
+      <h2>常见问题</h2>
+      <details>
+        <summary>为什么首页看不到手机？</summary>
+        <p>确认手机已开启 USB 调试并允许此电脑调试。无线连接需要先执行一次 <code>adb connect &lt;手机地址&gt;</code>，然后刷新设备。</p>
+      </details>
+      <details>
+        <summary>投屏中为什么不能切换设备或修改参数？</summary>
+        <p>参数在投屏前确定，投屏中切换会让画面与设置不一致。停止投屏后再开始，新参数才会生效。</p>
+      </details>
+      <details>
+        <summary>是官方产品吗？</summary>
+        <p>不是。ScrcpyX 是独立项目，底层使用官方 scrcpy 4.1 的 server 与 adb，见 GitHub 仓库的第三方组件说明。</p>
+      </details>
+      <details>
+        <summary>能用于商业场景吗？</summary>
+        <p>不能。本项目采用 PolyForm Noncommercial License 1.0.0，仅限非商业用途。</p>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    <p>ScrcpyX 采用 <a href="https://github.com/ShenYuanOR/ScrcpyX/blob/main/LICENSE" rel="noopener">PolyForm Noncommercial License 1.0.0</a> 发布，仅限非商业用途。</p>
+    <p>程序图标：铸图标 by CSS GG on <a href="https://icon-icons.com/zh/authors/1235-css-gg" rel="noopener">Icon-Icons.com</a>。</p>
+    <p>本项目不是 Genymobile 的官方产品。scrcpy 为 Apache License 2.0。</p>
+  </footer>
+</body>
+</html>
