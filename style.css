@@ -142,3 +142,10 @@ footer p { margin: 4px 0; }
   .hero { grid-template-columns: 1fr; padding-top: 40px; gap: 32px; }
   .top nav { gap: 12px; font-size: 14px; }
 }
+
+/* program previews */
+.hero-shot { width: 100%; max-width: 420px; height: auto; border-radius: 14px; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.45); display: block; margin: 0 auto; }
+.shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+.shots figure { margin: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.shots img { display: block; width: 100%; height: auto; }
+.shots figcaption { padding: 10px 14px; color: var(--muted); font-size: 14px; }
