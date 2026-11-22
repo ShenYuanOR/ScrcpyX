@@ -1,7 +1,7 @@
 ; ScrcpyX 安装包。只检查 .NET 10，不打包运行时。
 
 #define MyAppName "ScrcpyX"
-#define MyAppVersion "0.4.0"
+#define MyAppVersion "0.4.1"
 #define MyAppExeName "ScrcpyX.exe"
 
 [Setup]
@@ -16,7 +16,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\publish
-OutputBaseFilename=ScrcpyX-Setup-v{#MyAppVersion}
+OutputBaseFilename=ScrcpyX-Setup-{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

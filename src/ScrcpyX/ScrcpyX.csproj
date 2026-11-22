@@ -20,7 +20,7 @@
     <SelfContained>false</SelfContained>
     <DebugType>embedded</DebugType>
     <DebugSymbols>false</DebugSymbols>
-    <Version>0.4.0</Version>
+    <Version>0.4.1</Version>
     <AssemblyName>ScrcpyX</AssemblyName>
     <RootNamespace>ScrcpyX</RootNamespace>
     <ApplicationTitle>ScrcpyX</ApplicationTitle>
