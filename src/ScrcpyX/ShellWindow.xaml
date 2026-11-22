@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ScrcpyX"
     Title="ScrcpyX">
-  <Grid x:Name="Root" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" RequestedTheme="Dark">
+  <Grid x:Name="Root" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" RequestedTheme="Dark" SizeChanged="Root_SizeChanged">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
@@ -89,6 +89,36 @@
     <Style x:Key="FileDeleteStyle" TargetType="Button" BasedOn="{StaticResource FileCommandStyle}">
       <Setter Property="Background" Value="{ThemeResource SystemFillColorCriticalBackgroundBrush}" />
       <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+    </Style>
+    <Style TargetType="local:HoverLink">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="local:HoverLink">
+            <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+              <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates">
+                  <VisualState x:Name="Normal" />
+                  <VisualState x:Name="PointerOver" />
+                  <VisualState x:Name="Pressed" />
+                </VisualStateGroup>
+              </VisualStateManager.VisualStateGroups>
+              <ContentPresenter x:Name="Label" Content="{TemplateBinding Content}"
+                                FontSize="{TemplateBinding FontSize}"
+                                Foreground="{TemplateBinding Foreground}" />
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
     </Style>
     <MenuFlyout x:Key="DeviceFileMenu" Opening="DeviceFileMenu_Opening">
       <MenuFlyoutItem Text="打开" Click="MenuOpen_Click" />
@@ -448,6 +478,25 @@
         </Grid>
       </Border>
     </Grid>
+    <StackPanel x:Name="AboutCard" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,16,16" Visibility="Collapsed" AutomationProperties.Name="关于 ScrcpyX">
+      <StackPanel x:Name="AboutLines" Spacing="4" SizeChanged="AboutLines_SizeChanged">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <local:HoverLink Content="ShenYuanOL" Click="AuthorLink_Click" FontSize="14" AutomationProperties.Name="作者 ShenYuanOL" />
+          <TextBlock Text="┃" FontSize="14" VerticalAlignment="Center" IsHitTestVisible="False"
+                     Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+          <local:HoverLink Content="ScrcpyX" Click="RepoLink_Click" FontSize="14" AutomationProperties.Name="仓库 ScrcpyX" />
+        </StackPanel>
+        <local:HoverLink Content="PolyForm Noncommercial 1.0.0 · 仅限非商业用途" Click="LicenseLink_Click" FontSize="12"
+                         AutomationProperties.Name="商用协议" />
+        <local:HoverLink Content="铸图标 by CSS GG on Icon-Icons.com" Click="IconLink_Click" FontSize="12"
+                         AutomationProperties.Name="图标署名" />
+      </StackPanel>
+      <Button x:Name="CheckUpdateButton" Content="检查更新" Click="CheckUpdate_Click" Margin="0,8,0,0"
+              HorizontalAlignment="Left" HorizontalContentAlignment="Center" AutomationProperties.Name="检查更新" />
+      <TextBlock x:Name="UpdateStatusText" FontSize="12" Opacity="0.72" Margin="0,4,0,0"
+                 TextWrapping="Wrap" Visibility="Collapsed" />
+    </StackPanel>
     <InfoBar x:Name="WarningBanner" Grid.Row="1" IsOpen="False" IsClosable="True" Severity="Warning"
              VerticalAlignment="Top" HorizontalAlignment="Stretch" Margin="28,12,28,0" />
 

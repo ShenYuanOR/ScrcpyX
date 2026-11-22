@@ -105,6 +105,12 @@ Check(rolling.Add(10) == 10, "rolling first");
 Check(rolling.Add(20) == 15, "rolling second");
 Check(rolling.Add(30) == 20, "rolling third");
 Check(rolling.Add(40) == 30, "rolling drops the oldest sample");
+Check(ReleaseCheck.IsNewer("v0.4.10", "0.4.9"), "0.4.10 is newer than 0.4.9");
+Check(!ReleaseCheck.IsNewer("0.4.9", "v0.4.10"), "0.4.9 is not newer than 0.4.10");
+Check(!ReleaseCheck.IsNewer("v0.4.0", "0.4.0"), "the same version is not newer");
+Check(ReleaseCheck.IsNewer("0.5.0", "0.4.10"), "0.5.0 is newer than 0.4.10");
+Check(!ReleaseCheck.IsNewer("0.4", "0.4.0"), "a missing segment counts as zero");
+Check(!ReleaseCheck.IsNewer("nope", "0.4.0"), "a bad tag is not treated as newer");
 
 if (failures.Count > 0)
 {

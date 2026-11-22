@@ -75,6 +75,10 @@ public sealed partial class ShellWindow : Window
     private int _loadGeneration;
     private CancellationTokenSource? _fileOpCancel;
     private bool _fileOpBusy;
+    private int _updateEpoch;
+    private CancellationTokenSource? _updateCancel;
+    private string? _releasePage;
+    private double _aboutWidth;
 
     public ShellWindow(AppPaths paths, ScrcpyManifest manifest, string? warning)
     {
@@ -101,9 +105,12 @@ public sealed partial class ShellWindow : Window
             HomeView.LayoutUpdated += (_, _) => ApplyClosedAdvancedWidth();
             ApplyClosedAdvancedWidth();
             await RefreshDevicesAsync();
+            UpdateAboutCard();
+            StartUpdateCheck(manual: false);
         };
         Closed += (_, _) =>
         {
+            _updateCancel?.Cancel();
             _ = StopMirrorAsync();
             SaveSettings();
             SaveWindow();
@@ -325,7 +332,125 @@ public sealed partial class ShellWindow : Window
 
     private double ExpandedAdvancedWidth() => Math.Max(ClosedAdvancedWidth() + 180, 460);
 
-    private void HomeView_SizeChanged(object sender, SizeChangedEventArgs e) => LayoutAdvancedScroll();
+    private void HomeView_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        LayoutAdvancedScroll();
+        UpdateAboutCard();
+    }
+
+    private void Root_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateAboutCard();
+
+    private void UpdateAboutCard()
+    {
+        try
+        {
+            if (AboutCard.Visibility == Visibility.Visible && AboutCard.ActualWidth > 0)
+                _aboutWidth = AboutCard.ActualWidth;
+            var need = _aboutWidth > 0 ? _aboutWidth : 280;
+            var show = HomeView.Visibility == Visibility.Visible
+                && HomeView.ActualWidth >= 40
+                && Root.ActualWidth >= HomeView.ActualWidth + need + 16;
+            var next = show ? Visibility.Visible : Visibility.Collapsed;
+            if (AboutCard.Visibility != next)
+                AboutCard.Visibility = next;
+        }
+        catch (Exception)
+        {
+        }
+    }
+
+    private void AboutLines_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (e.NewSize.Width <= 0)
+            return;
+        CheckUpdateButton.Width = e.NewSize.Width;
+        UpdateStatusText.Width = e.NewSize.Width;
+    }
+
+    private void AuthorLink_Click(object sender, RoutedEventArgs e) => OpenLink(ReleaseCheck.AuthorUrl);
+
+    private void RepoLink_Click(object sender, RoutedEventArgs e) => OpenLink(ReleaseCheck.RepoUrl);
+
+    private void LicenseLink_Click(object sender, RoutedEventArgs e) => OpenLink(ReleaseCheck.LicenseUrl);
+
+    private void IconLink_Click(object sender, RoutedEventArgs e) => OpenLink(ReleaseCheck.IconCreditUrl);
+
+    private void CheckUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        if (CheckUpdateButton.Content is string text && text.StartsWith("检测到新版本") && !string.IsNullOrWhiteSpace(_releasePage))
+        {
+            OpenLink(_releasePage);
+            return;
+        }
+        StartUpdateCheck(manual: true);
+    }
+
+    private static void OpenLink(string url)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception)
+        {
+        }
+    }
+
+    private void StartUpdateCheck(bool manual)
+    {
+        var epoch = ++_updateEpoch;
+        _updateCancel?.Cancel();
+        _updateCancel = new CancellationTokenSource();
+        var token = _updateCancel.Token;
+        var current = ReleaseCheck.CurrentVersion;
+        if (manual)
+        {
+            CheckUpdateButton.IsEnabled = false;
+            CheckUpdateButton.Content = "检查中…";
+            UpdateStatusText.Visibility = Visibility.Collapsed;
+        }
+        _ = Run();
+
+        async Task Run()
+        {
+            var result = await ReleaseCheck.QueryAsync(current, token).ConfigureAwait(false);
+            if (token.IsCancellationRequested || epoch != _updateEpoch)
+                return;
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (epoch != _updateEpoch)
+                    return;
+                ShowUpdateResult(result, manual);
+            });
+        }
+    }
+
+    private void ShowUpdateResult(UpdateResult result, bool manual)
+    {
+        try
+        {
+            CheckUpdateButton.IsEnabled = true;
+            if (result.Kind == UpdateKind.Newer && !string.IsNullOrWhiteSpace(result.Version))
+            {
+                _releasePage = result.PageUrl;
+                CheckUpdateButton.Content = "检测到新版本V" + result.Version;
+                UpdateStatusText.Visibility = Visibility.Collapsed;
+                return;
+            }
+            CheckUpdateButton.Content = "检查更新";
+            if (!manual)
+            {
+                UpdateStatusText.Visibility = Visibility.Collapsed;
+                return;
+            }
+            _releasePage = null;
+            UpdateStatusText.Text = result.Kind == UpdateKind.Current ? "已是最新版本" : "暂时无法检查更新";
+            UpdateStatusText.Visibility = Visibility.Visible;
+        }
+        catch (Exception)
+        {
+        }
+    }
 
     private void AdvancedToggle_Click(object sender, RoutedEventArgs e)
     {
@@ -723,6 +848,7 @@ public sealed partial class ShellWindow : Window
         RememberHomeSize();
         FileView.Visibility = Visibility.Collapsed;
         HomeView.Visibility = Visibility.Collapsed;
+        UpdateAboutCard();
         VideoStatus.Text = "正在连接手机…";
         VideoStatus.Visibility = Visibility.Visible;
         ResetLatency();
@@ -746,6 +872,7 @@ public sealed partial class ShellWindow : Window
         _pressed = false;
         MirrorView.Visibility = Visibility.Collapsed;
         HomeView.Visibility = Visibility.Visible;
+        UpdateAboutCard();
         ApplyDeviceTitle();
         RestoreHomeSize();
     }
@@ -1392,6 +1519,7 @@ public sealed partial class ShellWindow : Window
             return;
         }
         HomeView.Visibility = Visibility.Collapsed;
+        UpdateAboutCard();
         FileView.Visibility = Visibility.Visible;
         _directory = "/sdcard";
         _ = LoadFilesAsync();
@@ -1401,6 +1529,7 @@ public sealed partial class ShellWindow : Window
     {
         FileView.Visibility = Visibility.Collapsed;
         HomeView.Visibility = Visibility.Visible;
+        UpdateAboutCard();
     }
 
     private static string CacheKey(string path)

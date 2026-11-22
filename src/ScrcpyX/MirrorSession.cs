@@ -66,18 +66,8 @@ public sealed class MirrorSession : IAsyncDisposable
             "CLASSPATH=/data/local/tmp/scrcpy-server.jar",
             "app_process", "/", "com.genymobile.scrcpy.Server", "4.1",
             "scid=" + scid,
-            "log_level=info",
-            "video=true",
             "audio=false",
-            "control=true",
-            "video_codec=h264",
-            "tunnel_forward=true",
-            "send_dummy_byte=true",
-            "send_device_meta=true",
-            "send_frame_meta=true",
-            "send_stream_meta=true",
-            "cleanup=true",
-            "power_on=true"
+            "tunnel_forward=true"
         };
         if (options.MaxSize is > 0)
             args.Add("max_size=" + options.MaxSize.Value.ToString(CultureInfo.InvariantCulture));
